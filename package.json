@@ -1,0 +1,47 @@
+{
+  "name": "node-core-easy-kit",
+  "version": "1.0.0",
+  "description": "Beginner-friendly utilities demonstrating Node.js core modules (fs, path, process, timers).",
+  "type": "module",
+  "main": "./src/index.js",
+  "bin": {
+    "node-core-easy-kit": "./bin/cli.js"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "demo": "node examples/demo.js"
+  },
+  "keywords": [
+    "nodejs",
+    "node",
+    "beginner",
+    "filesystem",
+    "path",
+    "process",
+    "timers",
+    "tutorial",
+    "zero-dependencies"
+  ],
+  "author": "Sanchit07-dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sanchit07-dev/node-core-easy-kit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Sanchit07-dev/node-core-easy-kit/issues"
+  },
+  "homepage": "https://github.com/Sanchit07-dev/node-core-easy-kit#readme",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,5 @@
+node_modules/
+.env
+demo-output/
+.DS_Store
+*.tgz
