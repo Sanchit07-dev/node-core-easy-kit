@@ -5,7 +5,7 @@
   "type": "module",
   "main": "./src/index.js",
   "bin": {
-    "node-core-easy-kit": "./bin/cli.js"
+    "node-core-easy-kit": "bin/cli.js"
   },
   "exports": {
     ".": "./src/index.js"
@@ -35,7 +35,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Sanchit07-dev/node-core-easy-kit.git"
+    "url": "git+https://github.com/Sanchit07-dev/node-core-easy-kit.git"
   },
   "bugs": {
     "url": "https://github.com/Sanchit07-dev/node-core-easy-kit/issues"
