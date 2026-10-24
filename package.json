@@ -1,6 +1,6 @@
 {
   "name": "node-core-easy-kit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Beginner-friendly utilities demonstrating Node.js core modules (fs, path, process, timers).",
   "type": "module",
   "main": "./src/index.js",
