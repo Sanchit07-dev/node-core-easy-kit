@@ -6,6 +6,7 @@
  */
 
 import { readFile, writeFile, mkdir, stat } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import process from "node:process";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -282,6 +283,40 @@ export function getRuntimeInfo() {
     platform: process.platform,
     architecture: process.arch,
     workingDirectory: process.cwd()
+  };
+}
+
+/**
+ * Retrieves safe system and hardware information.
+ *
+ * Demonstrates: `node:os` (`platform`, `type`, `arch`, `cpus`, `totalmem`, `freemem`, `uptime`, `homedir`).
+ *
+ * @returns {{
+ *   platform: string,
+ *   type: string,
+ *   architecture: string,
+ *   cpuCount: number,
+ *   totalMemoryBytes: number,
+ *   freeMemoryBytes: number,
+ *   uptimeSeconds: number,
+ *   homeDirectory: string
+ * }} Safe system environment details.
+ *
+ * @example
+ * import { getSystemInfo } from "node-core-easy-kit";
+ * const sys = getSystemInfo();
+ * console.log(`CPUs: ${sys.cpuCount}, Total RAM: ${sys.totalMemoryBytes}`);
+ */
+export function getSystemInfo() {
+  return {
+    platform: os.platform(),
+    type: os.type(),
+    architecture: os.arch(),
+    cpuCount: os.cpus().length,
+    totalMemoryBytes: os.totalmem(),
+    freeMemoryBytes: os.freemem(),
+    uptimeSeconds: Math.floor(os.uptime()),
+    homeDirectory: os.homedir()
   };
 }
 

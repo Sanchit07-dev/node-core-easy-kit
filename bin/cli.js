@@ -7,7 +7,7 @@
  */
 
 import process from "node:process";
-import { getRuntimeInfo, delay, resolvePath } from "../src/index.js";
+import { getRuntimeInfo, getSystemInfo, delay, resolvePath } from "../src/index.js";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -20,6 +20,7 @@ Usage:
 
 Commands:
   info                 Show Node.js runtime information (Node version, OS, arch, cwd)
+  sysinfo              Show system and hardware information (CPUs, RAM, uptime)
   delay <ms>           Pause execution for <ms> milliseconds
   resolve <...paths>   Resolve path segments into an absolute path
   --help, -h           Show this help message
@@ -27,6 +28,7 @@ Commands:
 
 Examples:
   node-core-easy-kit info
+  node-core-easy-kit sysinfo
   node-core-easy-kit delay 1000
   node-core-easy-kit resolve src index.js
 `;
@@ -49,6 +51,18 @@ async function main() {
     console.log(`  • OS Platform:      ${info.platform}`);
     console.log(`  • Architecture:     ${info.architecture}`);
     console.log(`  • Working Dir:      ${info.workingDirectory}`);
+    return;
+  }
+
+  if (command === "sysinfo") {
+    const sys = getSystemInfo();
+    console.log("System Information:");
+    console.log(`  • Platform:         ${sys.platform} (${sys.type})`);
+    console.log(`  • Architecture:     ${sys.architecture}`);
+    console.log(`  • CPU Cores:        ${sys.cpuCount}`);
+    console.log(`  • Total Memory:     ${(sys.totalMemoryBytes / (1024 ** 3)).toFixed(2)} GB`);
+    console.log(`  • Free Memory:      ${(sys.freeMemoryBytes / (1024 ** 3)).toFixed(2)} GB`);
+    console.log(`  • Uptime:           ${sys.uptimeSeconds}s`);
     return;
   }
 

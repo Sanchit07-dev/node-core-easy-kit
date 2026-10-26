@@ -14,6 +14,7 @@ import {
   getFileStats,
   resolvePath,
   getRuntimeInfo,
+  getSystemInfo,
   delay
 } from "../src/index.js";
 
@@ -277,15 +278,43 @@ test("Timers: delay rejects invalid durations", async () => {
   await assert.rejects(async () => delay(undefined), TypeError);
 });
 
+test("OS: getSystemInfo returns valid system and hardware details", () => {
+  const sys = getSystemInfo();
+
+  assert.equal(typeof sys.platform, "string");
+  assert.equal(typeof sys.type, "string");
+  assert.equal(typeof sys.architecture, "string");
+  assert.equal(typeof sys.cpuCount, "number");
+  assert.equal(sys.cpuCount > 0, true);
+  assert.equal(typeof sys.totalMemoryBytes, "number");
+  assert.equal(sys.totalMemoryBytes > 0, true);
+  assert.equal(typeof sys.freeMemoryBytes, "number");
+  assert.equal(sys.freeMemoryBytes >= 0, true);
+  assert.equal(typeof sys.uptimeSeconds, "number");
+  assert.equal(sys.uptimeSeconds >= 0, true);
+  assert.equal(typeof sys.homeDirectory, "string");
+  assert.equal(path.isAbsolute(sys.homeDirectory), true);
+
+  // Sensitive process credentials must not leak
+  assert.equal("env" in sys, false);
+});
+
 test("CLI: demonstrates commands when executed with node", async () => {
   const cliPath = path.resolve("bin", "cli.js");
 
   // Test --help
   const { stdout: helpOut } = await execFileAsync(process.execPath, [cliPath, "--help"]);
   assert.match(helpOut, /node-core-easy-kit \(CLI\)/);
+  assert.match(helpOut, /sysinfo/);
 
   // Test info
   const { stdout: infoOut } = await execFileAsync(process.execPath, [cliPath, "info"]);
   assert.match(infoOut, /Node\.js Runtime Environment:/);
   assert.match(infoOut, /Node Version:/);
+
+  // Test sysinfo
+  const { stdout: sysOut } = await execFileAsync(process.execPath, [cliPath, "sysinfo"]);
+  assert.match(sysOut, /System Information:/);
+  assert.match(sysOut, /CPU Cores:/);
+  assert.match(sysOut, /Total Memory:/);
 });
