@@ -1,7 +1,7 @@
 {
   "name": "node-core-easy-kit",
   "version": "1.0.1",
-  "description": "Beginner-friendly utilities demonstrating Node.js core modules (fs, path, process, timers).",
+  "description": "Beginner-friendly utilities demonstrating Node.js core modules (fs, path, process, timers, os, crypto).",
   "type": "module",
   "main": "./src/index.js",
   "bin": {
@@ -28,6 +28,8 @@
     "path",
     "process",
     "timers",
+    "os",
+    "crypto",
     "tutorial",
     "zero-dependencies"
   ],
