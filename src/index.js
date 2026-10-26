@@ -5,7 +5,7 @@
  * Built with 100% built-in Node.js modules and zero external runtime dependencies.
  */
 
-import { readFile, writeFile, mkdir, stat } from "node:fs/promises";
+import { readFile, writeFile, mkdir, stat, readdir } from "node:fs/promises";
 import crypto from "node:crypto";
 import os from "node:os";
 import path from "node:path";
@@ -231,6 +231,64 @@ export async function getFileStats(filePath) {
     }
     throw error;
   }
+}
+
+/**
+ * Lists file paths within a directory, with optional recursive traversal.
+ *
+ * Demonstrates: `node:fs/promises` (`readdir`).
+ *
+ * @param {string} dirPath - Path to the directory to list.
+ * @param {{ recursive?: boolean }} [options={ recursive: false }] - Traversal options.
+ * @returns {Promise<string[]>} Array of relative file paths sorted alphabetically.
+ * @throws {TypeError} If dirPath is not a non-empty string or options are invalid.
+ * @throws {Error} If the directory does not exist (code 'ENOENT').
+ *
+ * @example
+ * import { listFiles } from "node-core-easy-kit";
+ * const files = await listFiles("./src", { recursive: true });
+ * console.log("Files:", files);
+ */
+export async function listFiles(dirPath, options = {}) {
+  if (typeof dirPath !== "string" || dirPath.trim() === "") {
+    throw new TypeError("dirPath must be a non-empty string");
+  }
+  if (options !== null && typeof options !== "object") {
+    throw new TypeError("options must be an object if provided");
+  }
+
+  const recursive = Boolean(options?.recursive);
+  const root = path.resolve(dirPath);
+
+  async function scan(currentDir, relativePrefix = "") {
+    let entries;
+    try {
+      entries = await readdir(currentDir, { withFileTypes: true });
+    } catch (error) {
+      if (error && error.code === "ENOENT") {
+        const notFoundError = new Error(`Directory not found: "${currentDir}"`);
+        notFoundError.code = "ENOENT";
+        notFoundError.originalError = error;
+        throw notFoundError;
+      }
+      throw error;
+    }
+
+    const files = [];
+    for (const entry of entries) {
+      const entryRelPath = relativePrefix ? path.join(relativePrefix, entry.name) : entry.name;
+      if (entry.isFile()) {
+        files.push(entryRelPath);
+      } else if (entry.isDirectory() && recursive) {
+        const subFiles = await scan(path.join(currentDir, entry.name), entryRelPath);
+        files.push(...subFiles);
+      }
+    }
+    return files;
+  }
+
+  const result = await scan(root);
+  return result.sort();
 }
 
 /**

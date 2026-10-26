@@ -12,6 +12,7 @@ import {
   writeJson,
   fileExists,
   getFileStats,
+  listFiles,
   resolvePath,
   getRuntimeInfo,
   getSystemInfo,
@@ -217,6 +218,52 @@ test("FileSystem: getFileStats throws ENOENT on nonexistent file and validates i
     await assert.rejects(async () => getFileStats(""), TypeError);
     await assert.rejects(async () => getFileStats("   "), TypeError);
     await assert.rejects(async () => getFileStats(null), TypeError);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("FileSystem: listFiles lists files flatly and recursively", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "easykit-test-"));
+  const file1 = path.join(tempDir, "b-root.txt");
+  const file2 = path.join(tempDir, "a-root.txt");
+  const subFile = path.join(tempDir, "sub", "deep.txt");
+
+  try {
+    await writeText(file1, "b");
+    await writeText(file2, "a");
+    await writeText(subFile, "deep");
+
+    // Flat listing (default: recursive = false)
+    const flatList = await listFiles(tempDir);
+    assert.deepEqual(flatList, ["a-root.txt", "b-root.txt"]);
+
+    // Recursive listing
+    const recursiveList = await listFiles(tempDir, { recursive: true });
+    assert.deepEqual(recursiveList, ["a-root.txt", "b-root.txt", path.join("sub", "deep.txt")]);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("FileSystem: listFiles throws ENOENT on missing directory and validates parameters", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "easykit-test-"));
+  const nonexistent = path.join(tempDir, "not-here");
+
+  try {
+    await assert.rejects(
+      async () => listFiles(nonexistent),
+      (err) => {
+        assert.equal(err.code, "ENOENT");
+        assert.match(err.message, /Directory not found/);
+        return true;
+      }
+    );
+
+    await assert.rejects(async () => listFiles(""), TypeError);
+    await assert.rejects(async () => listFiles("   "), TypeError);
+    await assert.rejects(async () => listFiles(null), TypeError);
+    await assert.rejects(async () => listFiles("valid-dir", "invalid-options"), TypeError);
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
