@@ -77,6 +77,81 @@ export async function writeText(filePath, content) {
 }
 
 /**
+ * Reads and parses a JSON file asynchronously.
+ *
+ * Demonstrates: `node:fs/promises` (`readFile`) and native JSON parsing.
+ *
+ * @param {string} filePath - Path to the JSON file to read.
+ * @returns {Promise<any>} The parsed JSON data.
+ * @throws {TypeError} If filePath is not a non-empty string.
+ * @throws {Error} If the file does not exist (ENOENT) or contains invalid JSON.
+ *
+ * @example
+ * import { readJson } from "node-core-easy-kit";
+ * const config = await readJson("./package.json");
+ * console.log(config.name);
+ */
+export async function readJson(filePath) {
+  if (typeof filePath !== "string" || filePath.trim() === "") {
+    throw new TypeError("filePath must be a non-empty string");
+  }
+
+  const content = await readText(filePath);
+  try {
+    return JSON.parse(content);
+  } catch (error) {
+    const resolved = path.resolve(filePath);
+    const parseError = new SyntaxError(`Failed to parse JSON from "${resolved}": ${error.message}`);
+    parseError.code = "ERR_JSON_PARSE";
+    parseError.originalError = error;
+    throw parseError;
+  }
+}
+
+/**
+ * Serializes data to JSON and writes it to a file with automatic directory creation.
+ *
+ * Demonstrates: `node:fs/promises` (`writeFile`, `mkdir`) and formatted JSON serialization.
+ *
+ * @param {string} filePath - Target file path.
+ * @param {any} data - Data to serialize and write.
+ * @param {{ spaces?: number | string }} [options={ spaces: 2 }] - Serialization options.
+ * @returns {Promise<string>} The resolved absolute path of the written file.
+ * @throws {TypeError} If filePath is not a non-empty string or options are invalid.
+ *
+ * @example
+ * import { writeJson } from "node-core-easy-kit";
+ * await writeJson("output/settings.json", { theme: "dark", autoSave: true });
+ */
+export async function writeJson(filePath, data, options = {}) {
+  if (typeof filePath !== "string" || filePath.trim() === "") {
+    throw new TypeError("filePath must be a non-empty string");
+  }
+  if (options !== null && typeof options !== "object") {
+    throw new TypeError("options must be an object if provided");
+  }
+
+  const spaces = options?.spaces !== undefined ? options.spaces : 2;
+  if (typeof spaces !== "number" && typeof spaces !== "string" && spaces !== null) {
+    throw new TypeError("options.spaces must be a number, string, or null");
+  }
+
+  let jsonString;
+  try {
+    jsonString = JSON.stringify(data, null, spaces);
+  } catch (error) {
+    throw new TypeError(`Failed to serialize data to JSON: ${error.message}`);
+  }
+
+  if (jsonString === undefined) {
+    throw new TypeError("Cannot serialize undefined value to JSON");
+  }
+
+  const content = jsonString + "\n";
+  return await writeText(filePath, content);
+}
+
+/**
  * Resolves a sequence of path segments into an absolute path using platform-specific separators.
  *
  * Demonstrates: `node:path` (`resolve`).

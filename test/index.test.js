@@ -8,6 +8,8 @@ import { promisify } from "node:util";
 import {
   readText,
   writeText,
+  readJson,
+  writeJson,
   resolvePath,
   getRuntimeInfo,
   delay
@@ -75,6 +77,74 @@ test("FileSystem: invalid inputs throw TypeError", async () => {
   await assert.rejects(async () => writeText("file.txt", null), TypeError);
   await assert.rejects(async () => writeText("file.txt", 12345), TypeError);
   await assert.rejects(async () => writeText(null, "content"), TypeError);
+});
+
+test("FileSystem: writeJson and readJson round-trip objects and arrays", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "easykit-test-"));
+  const jsonFile = path.join(tempDir, "data", "config.json");
+
+  try {
+    const payload = {
+      name: "node-core-easy-kit",
+      version: "1.0.1",
+      features: ["zero-dep", "promises", "modern"],
+      meta: { active: true, count: 42 }
+    };
+
+    const writtenPath = await writeJson(jsonFile, payload);
+    assert.equal(writtenPath, path.resolve(jsonFile));
+
+    const parsed = await readJson(jsonFile);
+    assert.deepEqual(parsed, payload);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("FileSystem: writeJson respects custom spaces formatting", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "easykit-test-"));
+  const jsonFile = path.join(tempDir, "compact.json");
+
+  try {
+    await writeJson(jsonFile, { a: 1 }, { spaces: 0 });
+    const content = await readText(jsonFile);
+    assert.equal(content, '{"a":1}\n');
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("FileSystem: readJson throws clear SyntaxError on malformed JSON", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "easykit-test-"));
+  const invalidJsonFile = path.join(tempDir, "invalid.json");
+
+  try {
+    await writeText(invalidJsonFile, "{ invalid_json: ");
+    await assert.rejects(
+      async () => readJson(invalidJsonFile),
+      (err) => {
+        assert.equal(err instanceof SyntaxError, true);
+        assert.equal(err.code, "ERR_JSON_PARSE");
+        assert.match(err.message, /Failed to parse JSON/);
+        return true;
+      }
+    );
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("FileSystem: readJson and writeJson validate inputs", async () => {
+  // readJson validation
+  await assert.rejects(async () => readJson(""), TypeError);
+  await assert.rejects(async () => readJson("   "), TypeError);
+  await assert.rejects(async () => readJson(null), TypeError);
+
+  // writeJson validation
+  await assert.rejects(async () => writeJson("", { ok: true }), TypeError);
+  await assert.rejects(async () => writeJson("valid.json", { ok: true }, "invalid-options"), TypeError);
+  await assert.rejects(async () => writeJson("valid.json", { ok: true }, { spaces: false }), TypeError);
+  await assert.rejects(async () => writeJson("valid.json", undefined), TypeError);
 });
 
 test("Path: resolvePath resolves segments into an absolute path", () => {
