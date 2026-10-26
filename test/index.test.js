@@ -10,6 +10,8 @@ import {
   writeText,
   readJson,
   writeJson,
+  fileExists,
+  getFileStats,
   resolvePath,
   getRuntimeInfo,
   delay
@@ -145,6 +147,77 @@ test("FileSystem: readJson and writeJson validate inputs", async () => {
   await assert.rejects(async () => writeJson("valid.json", { ok: true }, "invalid-options"), TypeError);
   await assert.rejects(async () => writeJson("valid.json", { ok: true }, { spaces: false }), TypeError);
   await assert.rejects(async () => writeJson("valid.json", undefined), TypeError);
+});
+
+test("FileSystem: fileExists returns true for existing paths and false for nonexistent paths", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "easykit-test-"));
+  const sampleFile = path.join(tempDir, "exists.txt");
+
+  try {
+    assert.equal(await fileExists(tempDir), true); // directory check
+    assert.equal(await fileExists(sampleFile), false); // file not yet created
+
+    await writeText(sampleFile, "present");
+    assert.equal(await fileExists(sampleFile), true); // file now exists
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("FileSystem: fileExists validates input parameter", async () => {
+  await assert.rejects(async () => fileExists(""), TypeError);
+  await assert.rejects(async () => fileExists("   "), TypeError);
+  await assert.rejects(async () => fileExists(null), TypeError);
+  await assert.rejects(async () => fileExists(12345), TypeError);
+});
+
+test("FileSystem: getFileStats returns accurate metadata for files and directories", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "easykit-test-"));
+  const sampleFile = path.join(tempDir, "stat-sample.txt");
+  const testPayload = "Hello Node Stats!";
+
+  try {
+    await writeText(sampleFile, testPayload);
+
+    // Test file statistics
+    const fileStats = await getFileStats(sampleFile);
+    assert.equal(fileStats.path, path.resolve(sampleFile));
+    assert.equal(fileStats.isFile, true);
+    assert.equal(fileStats.isDirectory, false);
+    assert.equal(fileStats.size, Buffer.byteLength(testPayload));
+    assert.equal(fileStats.createdAt instanceof Date, true);
+    assert.equal(fileStats.modifiedAt instanceof Date, true);
+
+    // Test directory statistics
+    const dirStats = await getFileStats(tempDir);
+    assert.equal(dirStats.path, path.resolve(tempDir));
+    assert.equal(dirStats.isFile, false);
+    assert.equal(dirStats.isDirectory, true);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("FileSystem: getFileStats throws ENOENT on nonexistent file and validates input", async () => {
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "easykit-test-"));
+  const nonExistent = path.join(tempDir, "ghost.txt");
+
+  try {
+    await assert.rejects(
+      async () => getFileStats(nonExistent),
+      (err) => {
+        assert.equal(err.code, "ENOENT");
+        assert.match(err.message, /File or directory not found/);
+        return true;
+      }
+    );
+
+    await assert.rejects(async () => getFileStats(""), TypeError);
+    await assert.rejects(async () => getFileStats("   "), TypeError);
+    await assert.rejects(async () => getFileStats(null), TypeError);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
 });
 
 test("Path: resolvePath resolves segments into an absolute path", () => {

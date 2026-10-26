@@ -5,7 +5,7 @@
  * Built with 100% built-in Node.js modules and zero external runtime dependencies.
  */
 
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, stat } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { setTimeout as sleep } from "node:timers/promises";
@@ -149,6 +149,86 @@ export async function writeJson(filePath, data, options = {}) {
 
   const content = jsonString + "\n";
   return await writeText(filePath, content);
+}
+
+/**
+ * Checks whether a file or directory exists asynchronously.
+ *
+ * Demonstrates: `node:fs/promises` (`stat`).
+ *
+ * @param {string} filePath - Path to check.
+ * @returns {Promise<boolean>} True if the file or directory exists, false otherwise.
+ * @throws {TypeError} If filePath is not a non-empty string.
+ *
+ * @example
+ * import { fileExists } from "node-core-easy-kit";
+ * if (await fileExists("./config.json")) {
+ *   console.log("Config exists!");
+ * }
+ */
+export async function fileExists(filePath) {
+  if (typeof filePath !== "string" || filePath.trim() === "") {
+    throw new TypeError("filePath must be a non-empty string");
+  }
+
+  try {
+    await stat(filePath);
+    return true;
+  } catch (error) {
+    if (error && error.code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Retrieves file or directory metadata statistics.
+ *
+ * Demonstrates: `node:fs/promises` (`stat`).
+ *
+ * @param {string} filePath - Path to the file or directory.
+ * @returns {Promise<{
+ *   path: string,
+ *   size: number,
+ *   isFile: boolean,
+ *   isDirectory: boolean,
+ *   createdAt: Date,
+ *   modifiedAt: Date
+ * }>} File metadata object.
+ * @throws {TypeError} If filePath is not a non-empty string.
+ * @throws {Error} If the file or directory does not exist (code 'ENOENT').
+ *
+ * @example
+ * import { getFileStats } from "node-core-easy-kit";
+ * const stats = await getFileStats("./package.json");
+ * console.log(`Size: ${stats.size} bytes, Modified: ${stats.modifiedAt}`);
+ */
+export async function getFileStats(filePath) {
+  if (typeof filePath !== "string" || filePath.trim() === "") {
+    throw new TypeError("filePath must be a non-empty string");
+  }
+
+  const absolutePath = path.resolve(filePath);
+  try {
+    const fileStat = await stat(filePath);
+    return {
+      path: absolutePath,
+      size: fileStat.size,
+      isFile: fileStat.isFile(),
+      isDirectory: fileStat.isDirectory(),
+      createdAt: fileStat.birthtime,
+      modifiedAt: fileStat.mtime
+    };
+  } catch (error) {
+    if (error && error.code === "ENOENT") {
+      const notFoundError = new Error(`File or directory not found: "${absolutePath}"`);
+      notFoundError.code = "ENOENT";
+      notFoundError.originalError = error;
+      throw notFoundError;
+    }
+    throw error;
+  }
 }
 
 /**
