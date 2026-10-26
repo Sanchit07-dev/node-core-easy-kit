@@ -15,6 +15,7 @@ import {
   resolvePath,
   getRuntimeInfo,
   getSystemInfo,
+  hashText,
   delay
 } from "../src/index.js";
 
@@ -299,6 +300,35 @@ test("OS: getSystemInfo returns valid system and hardware details", () => {
   assert.equal("env" in sys, false);
 });
 
+test("Crypto: hashText produces accurate digests and validates algorithms", () => {
+  // Test standard sha256 digest
+  const sha256Digest = hashText("hello world", "sha256");
+  assert.equal(sha256Digest, "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
+
+  // Default algorithm is sha256
+  assert.equal(hashText("hello world"), sha256Digest);
+
+  // Test md5 digest
+  const md5Digest = hashText("hello world", "md5");
+  assert.equal(md5Digest, "5eb63bbbe01eeed093cb22bb8f5acdc3");
+
+  // Invalid algorithm throws ERR_CRYPTO_INVALID_ALGORITHM
+  assert.throws(
+    () => hashText("hello", "nonexistent-algorithm-xyz"),
+    (err) => {
+      assert.equal(err.code, "ERR_CRYPTO_INVALID_ALGORITHM");
+      assert.match(err.message, /Unsupported hash algorithm/);
+      return true;
+    }
+  );
+
+  // Input validation
+  assert.throws(() => hashText(123), TypeError);
+  assert.throws(() => hashText(null), TypeError);
+  assert.throws(() => hashText("hello", ""), TypeError);
+  assert.throws(() => hashText("hello", 123), TypeError);
+});
+
 test("CLI: demonstrates commands when executed with node", async () => {
   const cliPath = path.resolve("bin", "cli.js");
 
@@ -306,6 +336,7 @@ test("CLI: demonstrates commands when executed with node", async () => {
   const { stdout: helpOut } = await execFileAsync(process.execPath, [cliPath, "--help"]);
   assert.match(helpOut, /node-core-easy-kit \(CLI\)/);
   assert.match(helpOut, /sysinfo/);
+  assert.match(helpOut, /hash <text>/);
 
   // Test info
   const { stdout: infoOut } = await execFileAsync(process.execPath, [cliPath, "info"]);
@@ -317,4 +348,8 @@ test("CLI: demonstrates commands when executed with node", async () => {
   assert.match(sysOut, /System Information:/);
   assert.match(sysOut, /CPU Cores:/);
   assert.match(sysOut, /Total Memory:/);
+
+  // Test hash
+  const { stdout: hashOut } = await execFileAsync(process.execPath, [cliPath, "hash", "hello world"]);
+  assert.equal(hashOut.trim(), "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
 });

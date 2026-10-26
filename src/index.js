@@ -6,6 +6,7 @@
  */
 
 import { readFile, writeFile, mkdir, stat } from "node:fs/promises";
+import crypto from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import process from "node:process";
@@ -318,6 +319,40 @@ export function getSystemInfo() {
     uptimeSeconds: Math.floor(os.uptime()),
     homeDirectory: os.homedir()
   };
+}
+
+/**
+ * Computes a cryptographic hash digest of a text string.
+ *
+ * Demonstrates: `node:crypto` (`createHash`).
+ *
+ * @param {string} text - The input string to hash.
+ * @param {string} [algorithm="sha256"] - Hash algorithm (e.g. 'sha256', 'md5', 'sha512').
+ * @returns {string} Hexadecimal hash digest.
+ * @throws {TypeError} If text is not a string or algorithm is not a non-empty string.
+ * @throws {Error} If the specified algorithm is not supported.
+ *
+ * @example
+ * import { hashText } from "node-core-easy-kit";
+ * const hash = hashText("Hello World");
+ * console.log(`SHA-256: ${hash}`);
+ */
+export function hashText(text, algorithm = "sha256") {
+  if (typeof text !== "string") {
+    throw new TypeError("text must be a string");
+  }
+  if (typeof algorithm !== "string" || algorithm.trim() === "") {
+    throw new TypeError("algorithm must be a non-empty string");
+  }
+
+  try {
+    return crypto.createHash(algorithm).update(text, "utf8").digest("hex");
+  } catch (error) {
+    const invalidAlgError = new Error(`Unsupported hash algorithm "${algorithm}": ${error.message}`);
+    invalidAlgError.code = "ERR_CRYPTO_INVALID_ALGORITHM";
+    invalidAlgError.originalError = error;
+    throw invalidAlgError;
+  }
 }
 
 /**

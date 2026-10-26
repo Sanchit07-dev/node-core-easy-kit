@@ -7,7 +7,7 @@
  */
 
 import process from "node:process";
-import { getRuntimeInfo, getSystemInfo, delay, resolvePath } from "../src/index.js";
+import { getRuntimeInfo, getSystemInfo, delay, resolvePath, hashText } from "../src/index.js";
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -21,6 +21,7 @@ Usage:
 Commands:
   info                 Show Node.js runtime information (Node version, OS, arch, cwd)
   sysinfo              Show system and hardware information (CPUs, RAM, uptime)
+  hash <text> [alg]    Compute cryptographic hash (default algorithm: sha256)
   delay <ms>           Pause execution for <ms> milliseconds
   resolve <...paths>   Resolve path segments into an absolute path
   --help, -h           Show this help message
@@ -29,6 +30,8 @@ Commands:
 Examples:
   node-core-easy-kit info
   node-core-easy-kit sysinfo
+  node-core-easy-kit hash "hello world"
+  node-core-easy-kit hash "hello world" md5
   node-core-easy-kit delay 1000
   node-core-easy-kit resolve src index.js
 `;
@@ -63,6 +66,23 @@ async function main() {
     console.log(`  • Total Memory:     ${(sys.totalMemoryBytes / (1024 ** 3)).toFixed(2)} GB`);
     console.log(`  • Free Memory:      ${(sys.freeMemoryBytes / (1024 ** 3)).toFixed(2)} GB`);
     console.log(`  • Uptime:           ${sys.uptimeSeconds}s`);
+    return;
+  }
+
+  if (command === "hash") {
+    const text = args[1];
+    const alg = args[2] || "sha256";
+    if (typeof text !== "string") {
+      console.error("Error: Please provide a text string to hash.");
+      process.exitCode = 1;
+      return;
+    }
+    try {
+      console.log(hashText(text, alg));
+    } catch (err) {
+      console.error(`Error: ${err.message}`);
+      process.exitCode = 1;
+    }
     return;
   }
 
