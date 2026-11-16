@@ -10,6 +10,8 @@ A beginner-friendly, zero-dependency Node.js toolkit demonstrating **Node.js cor
 
 Whether you are building your first npm package or learning Node.js fundamentals, this library provides a clean, predictable, and fully-tested reference implementation.
 
+> 💡 **Looking for a real-world demo?** Check out the full interactive CLI consumer application: **[`node-core-easy-kit-demo`](https://github.com/Sanchit07-dev/node-core-easy-kit-demo)**.
+
 ---
 
 ## 📦 Features
@@ -217,6 +219,18 @@ Pauses asynchronous execution for the specified duration using Promise-based tim
 - **Parameters:**
   - `milliseconds` (`number`): Non-negative number of milliseconds to pause.
 - **Returns:** `Promise<void>`
+
+---
+
+## 🎮 Live Demo Application
+
+A complete interactive CLI consumer application has been developed to demonstrate real-world usage of `node-core-easy-kit`:
+
+👉 **[`node-core-easy-kit-demo`](https://github.com/Sanchit07-dev/node-core-easy-kit-demo)**
+
+- **Interactive Terminal Interface:** Modular menu covering File Management, System Telemetry, Security Utilities, and JSON Configuration.
+- **External Package Consumer:** Demonstrates installing and utilizing `node-core-easy-kit` as a formal npm dependency.
+- **Automated Verification:** Fully covered by 28 automated integration tests using Node.js's built-in test runner (`node:test`).
 
 ---
 
